@@ -91,9 +91,18 @@ t = {
 
 g = {
     "Start" : ["Stm"],
-    "Stm" : [[t["ID"], t["="], "Expr"], ["Expr"]],
-    "Expr" : [["Expr", t["OP"], "Term"], ["Term"]],
-    "Term" : [[t["ID"]], [t["NUM"]]]
+    "Stm" : [
+        [t["ID"], t["="], "Expr"], 
+        ["Expr"]
+    ],
+    "Expr" : [
+        ["Expr", t["OP"], "Term"], 
+        ["Term"]
+    ],
+    "Term" : [
+        [t["ID"]], 
+        [t["NUM"]]
+    ]
 }
 
 n = {}
