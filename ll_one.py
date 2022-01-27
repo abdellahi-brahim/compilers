@@ -5,10 +5,20 @@ class NonTerminal:
         self.follow = []
         
     def add_first(self, first):
-        self.first.append(first)
+        if type(first) is not list:
+            first = [first]
+        
+        for el in first:
+            if el not in self.first:
+                self.first.append(el)
         
     def add_follow(self, follow):
-        self.follow.append(follow)
+        if type(follow) is not list:
+            follow = [follow]
+        
+        for el in follow:
+            if el not in self.follow:
+                self.follow.append(el)
 
 def get_value(dictionary, key):
     values = list(dictionary.values())
@@ -18,27 +28,31 @@ def get_value(dictionary, key):
 def set_nullable(g, n, t, key):
     if n[key].nullable is not None:
         return n[key].nullable 
+        
+    productions = []
+        
+    if type(g[key][0]) is list:
+        productions = g[key]
+    else:
+        productions.append(g[key])
     
-    for p in g[key]:
-        if p is None:
-            return True
-        
-        if type(p) is int:
-            return False
-        
-        if type(p) is list:
-            for p2 in p:
-                if type(p2) is int:
+    for production in productions:
+        for element in production:
+            #One nullable element
+            if element is None and len(production) == 1:
+                return True
+            
+            #Non terminal in production
+            if type(element) is int:
+                return False
+            
+            if element != key:
+                n[element].nullable = set_nullable(g, n, t, element)
+                
+                if not n[element].nullable:
                     return False
-                    
-                elif p2 != key:
-                    n[key].nullable = set_nullable(g, n, t, p2)
-        
-        elif type(p) is int:
-            return False
-        
-        elif p != key:
-            n[key].nullable = set_nullable(g, n, t, p)
+    
+    return True
         
 def nullable(g, n, t):
     for p in g:
@@ -46,21 +60,28 @@ def nullable(g, n, t):
                 
 
 def get_first(g, n, t, key):
-    if key is None:
-        return []
+    if len(n[key].first) > 0:
+        return n[key].first
+        
+    productions = []
+        
+    if type(g[key][0]) is list:
+        productions = g[key]
+    else:
+        productions.append(g[key])
     
-    first = []
-    
-    for p in g[key]:
-        if isinstance(p, str):
-            if(not n[p].nullable):
-                return first
+    for production in productions:
+        for element in production:
+            if type(element) is int:
+                n[key].add_first(get_value(t, element))
+                break
+                    
+            if not n[element].nullable and element != key:
+                n[key].add_first(get_first(g, n, t, element))
+                break
             
-            first += get_first(g, n, t, p)
-                
-        else:
-            first.append(get_value(t, p))
-            return first
+    return n[key].first
+        
         
 def first(g, n, t):
     for p in g:
@@ -111,5 +132,5 @@ for p in g:
     n[p] = NonTerminal()
     
 nullable(g, n, t)
-#first(g, n, t)
+first(g, n, t)
 print_table(n)
